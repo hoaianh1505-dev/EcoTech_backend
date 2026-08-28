@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: ecotech_db
+    environment:
+      POSTGRES_DB: ecotech_dev
+      POSTGRES_USER: ecotech
+      POSTGRES_PASSWORD: ecotech123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # pgAdmin – Giao diện quản lý DB trên web
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: ecotech_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@ecotech.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  pgdata:
