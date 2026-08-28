@@ -5,6 +5,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { connectDB } from './src/config/db.js';
+import authRoutes from './src/routes/auth.routes.js';
 
 // 1. Khởi tạo Express app
 const app = express();
@@ -16,7 +17,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
-// 3. Route kiểm tra sức khỏe server (Health Check)
+// 3. Mount API Routes
+app.use('/api/v1/auth', authRoutes);
+
+// 4. Route kiểm tra sức khỏe server (Health Check)
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'success',
