@@ -2,9 +2,11 @@
 export const slugify = (text) => {
   return text
     .toString()
+    .toLowerCase()
+    .replace(/đ/g, 'd')                 // Chuyển chữ đ thường thành d
+    .replace(/đ/g, 'd')                 // Chuyển chữ đ hoa thành d (sau khi toLowerCase sẽ là đ thường)
     .normalize('NFD')                   // Tách các dấu tiếng Việt
     .replace(/[\u0300-\u036f]/g, '')     // Xóa bỏ các ký tự dấu đã tách
-    .toLowerCase()
     .trim()
     .replace(/\s+/g, '-')               // Thay thế khoảng trắng bằng dấu gạch ngang
     .replace(/[^\w\-]+/g, '')           // Xóa bỏ các ký tự đặc biệt

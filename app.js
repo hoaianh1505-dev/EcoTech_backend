@@ -8,6 +8,7 @@ import { connectDB } from './src/config/db.js';
 import authRoutes from './src/routes/auth.routes.js';
 import categoryRoutes from './src/routes/category.routes.js';
 import productRoutes from './src/routes/product.routes.js';
+import aiRoutes from './src/routes/ai.routes.js';
 
 // 1. Khởi tạo Express app
 const app = express();
@@ -23,6 +24,7 @@ app.use(morgan('dev'));
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/products', productRoutes);
+app.use('/api/v1/ai', aiRoutes);
 
 // 4. Route kiểm tra sức khỏe server (Health Check)
 app.get('/health', (req, res) => {

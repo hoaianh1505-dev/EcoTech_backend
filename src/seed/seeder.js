@@ -17,8 +17,8 @@ const seedDatabase = async () => {
 
     // 1. Dọn dẹp dữ liệu cũ (Xóa sản phẩm trước để tránh lỗi ràng buộc khóa ngoại)
     console.log('🧹 Clearing old products and categories...');
-    await productRepository.delete({});
-    await categoryRepository.delete({});
+    await productRepository.createQueryBuilder().delete().execute();
+    await categoryRepository.createQueryBuilder().delete().execute();
     console.log('✨ Cleared old data!');
 
     // 2. Nạp dữ liệu Danh mục
