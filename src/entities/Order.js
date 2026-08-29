@@ -57,5 +57,10 @@ export const Order = new EntitySchema({
       joinColumn: { name: 'userId' },
       onDelete: 'SET NULL',
     },
+    orderItems: {
+      type: 'one-to-many',    // 1 Đơn hàng chứa nhiều món hàng (xe hơi)
+      target: 'OrderItem',
+      mappedBy: 'order',
+    },
   },
 });

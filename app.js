@@ -9,6 +9,7 @@ import authRoutes from './src/routes/auth.routes.js';
 import categoryRoutes from './src/routes/category.routes.js';
 import productRoutes from './src/routes/product.routes.js';
 import aiRoutes from './src/routes/ai.routes.js';
+import orderRoutes from './src/routes/order.routes.js';
 
 // 1. Khởi tạo Express app
 const app = express();
@@ -25,6 +26,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/ai', aiRoutes);
+app.use('/api/v1/orders', orderRoutes);
 
 // 4. Route kiểm tra sức khỏe server (Health Check)
 app.get('/health', (req, res) => {
