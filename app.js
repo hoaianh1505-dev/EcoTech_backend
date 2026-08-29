@@ -6,6 +6,8 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import { connectDB } from './src/config/db.js';
 import authRoutes from './src/routes/auth.routes.js';
+import categoryRoutes from './src/routes/category.routes.js';
+import productRoutes from './src/routes/product.routes.js';
 
 // 1. Khởi tạo Express app
 const app = express();
@@ -19,6 +21,8 @@ app.use(morgan('dev'));
 
 // 3. Mount API Routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/categories', categoryRoutes);
+app.use('/api/v1/products', productRoutes);
 
 // 4. Route kiểm tra sức khỏe server (Health Check)
 app.get('/health', (req, res) => {
