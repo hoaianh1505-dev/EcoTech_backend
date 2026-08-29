@@ -1,110 +1,17 @@
-import { AppDataSource } from '../config/data-source.js';
-import { Order } from '../entities/Order.js';
-import { OrderItem } from '../entities/OrderItem.js';
-import { Product } from '../entities/Product.js';
+import { orderService } from '../services/order.service.js';
 
-// 1. [POST] /api/v1/orders - Tạo đơn đặt hàng/Đặt cọc xe mới (Có Transaction bảo vệ dữ liệu)
+// 1. [POST] /api/v1/orders - Tạo đơn đặt hàng/Đặt cọc xe mới
 export const createOrder = async (req, res) => {
-  const queryRunner = AppDataSource.createQueryRunner();
-  await queryRunner.connect();
-  await queryRunner.startTransaction(); // Khởi tạo Transaction
-
   try {
     const { items, shippingAddress, paymentMethod, notes } = req.body;
-
-    // A. Kiểm tra dữ liệu đầu vào cơ bản
-    if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Vui lòng cung cấp ít nhất một sản phẩm xe hơi để đặt hàng!',
-      });
-    }
-
-    if (!shippingAddress || !shippingAddress.fullName || !shippingAddress.phone || !shippingAddress.address || !shippingAddress.city) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Vui lòng cung cấp đầy đủ thông tin người nhận (Họ tên, SĐT, Địa chỉ, Thành phố)!',
-      });
-    }
-
-    const productRepository = queryRunner.manager.getRepository(Product);
-    const orderRepository = queryRunner.manager.getRepository(Order);
-    const orderItemRepository = queryRunner.manager.getRepository(OrderItem);
-
-    let totalAmount = 0;
-    const orderItemsToSave = [];
-    const productsToUpdate = [];
-
-    // B. Kiểm tra tồn kho và tính tổng tiền thực tế từ DB
-    for (const item of items) {
-      const { productId, quantity } = item;
-
-      if (!productId || !quantity || quantity <= 0) {
-        await queryRunner.rollbackTransaction();
-        return res.status(400).json({
-          status: 'fail',
-          message: 'Thông tin sản phẩm hoặc số lượng không hợp lệ!',
-        });
-      }
-
-      // Lấy trực tiếp xe hơi từ database
-      const product = await productRepository.findOneBy({ id: productId });
-      if (!product) {
-        await queryRunner.rollbackTransaction();
-        return res.status(404).json({
-          status: 'fail',
-          message: `Không tìm thấy sản phẩm xe hơi với ID: ${productId}!`,
-        });
-      }
-
-      // Kiểm tra lượng xe còn trong Showroom
-      if (product.stock < quantity) {
-        await queryRunner.rollbackTransaction();
-        return res.status(400).json({
-          status: 'fail',
-          message: `Mẫu xe '${product.name}' hiện chỉ còn lại ${product.stock} chiếc trong kho, không đủ số lượng đặt (${quantity} chiếc)!`,
-        });
-      }
-
-      const itemPrice = Number(product.price);
-      totalAmount += itemPrice * quantity;
-
-      // Giảm stock của xe
-      product.stock -= quantity;
-      productsToUpdate.push(product);
-
-      // Chuẩn bị lưu OrderItem
-      const orderItem = orderItemRepository.create({
-        quantity,
-        price: itemPrice,
-        product,
-      });
-      orderItemsToSave.push(orderItem);
-    }
-
-    // C. Lưu đơn hàng chính (Order)
-    const newOrder = orderRepository.create({
-      totalAmount,
+    
+    // Gọi xuống lớp Service để xử lý nghiệp vụ sâu & Transaction
+    const savedOrder = await orderService.createOrder(req.user.id, {
+      items,
       shippingAddress,
-      paymentMethod: paymentMethod || 'cod',
+      paymentMethod,
       notes,
-      user: { id: req.user.id }, // Liên kết với User đang đăng nhập
     });
-
-    const savedOrder = await orderRepository.save(newOrder);
-
-    // D. Lưu danh sách món hàng trong đơn và cập nhật tồn kho sản phẩm
-    for (const orderItem of orderItemsToSave) {
-      orderItem.order = savedOrder; // Gán khóa ngoại liên kết
-      await orderItemRepository.save(orderItem);
-    }
-
-    for (const product of productsToUpdate) {
-      await productRepository.save(product);
-    }
-
-    // Cam kết Transaction thành công
-    await queryRunner.commitTransaction();
 
     res.status(201).json({
       status: 'success',
@@ -116,29 +23,35 @@ export const createOrder = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Lỗi createOrder (Transaction Rollbacked):', error);
-    await queryRunner.rollbackTransaction(); // Quay lui dữ liệu nếu có lỗi xảy ra
+    console.error('Lỗi createOrder:', error);
+    
+    // Bắt lỗi cụ thể ném ra từ Service
+    if (error.message.startsWith('PRODUCT_NOT_FOUND')) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Không tìm thấy mẫu xe hơi yêu cầu!',
+      });
+    }
+    if (error.message.startsWith('INSUFFICIENT_STOCK')) {
+      const parts = error.message.split(':');
+      return res.status(400).json({
+        status: 'fail',
+        message: `Mẫu xe '${parts[1]}' hiện chỉ còn lại ${parts[2]} chiếc trong kho, không đủ số lượng đặt!`,
+      });
+    }
+
     res.status(500).json({
       status: 'error',
       message: 'Có lỗi xảy ra trên Server khi xử lý đặt hàng!',
     });
-  } finally {
-    await queryRunner.release(); // Giải phóng kết nối queryRunner
   }
 };
 
 // 2. [GET] /api/v1/orders/my-orders - Lấy danh sách lịch sử đặt xe của cá nhân
 export const getMyOrders = async (req, res) => {
   try {
-    const orderRepository = AppDataSource.getRepository(Order);
+    const orders = await orderService.getMyOrders(req.user.id);
     
-    // Tìm các đơn hàng thuộc về userId của người dùng hiện tại
-    const orders = await orderRepository.find({
-      where: { user: { id: req.user.id } },
-      relations: ['orderItems', 'orderItems.product'], // Lấy kèm chi tiết món hàng & thông tin xe
-      order: { createdAt: 'DESC' },
-    });
-
     res.status(200).json({
       status: 'success',
       results: orders.length,
@@ -155,31 +68,14 @@ export const getMyOrders = async (req, res) => {
   }
 };
 
-// 3. [GET] /api/v1/orders/:id - Xem chi tiết 1 đơn đặt cọc xe (Yêu cầu chính chủ hoặc Admin)
+// 3. [GET] /api/v1/orders/:id - Xem chi tiết 1 đơn đặt cọc xe
 export const getOrderById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const orderRepository = AppDataSource.getRepository(Order);
-
-    const order = await orderRepository.findOne({
-      where: { id: Number(id) },
-      relations: ['user', 'orderItems', 'orderItems.product'],
-    });
-
-    if (!order) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'Không tìm thấy đơn hàng này!',
-      });
-    }
-
-    // Bảo mật: Chỉ cho phép Admin hoặc chính chủ đơn hàng xem
-    if (order.user.id !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({
-        status: 'fail',
-        message: 'Bạn không có quyền truy cập thông tin đơn đặt xe này!',
-      });
-    }
+    const order = await orderService.getOrderById(
+      Number(req.params.id),
+      req.user.id,
+      req.user.role
+    );
 
     res.status(200).json({
       status: 'success',
@@ -189,6 +85,18 @@ export const getOrderById = async (req, res) => {
     });
   } catch (error) {
     console.error('Lỗi getOrderById:', error);
+    if (error.message === 'ORDER_NOT_FOUND') {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Không tìm thấy đơn hàng này!',
+      });
+    }
+    if (error.message === 'FORBIDDEN') {
+      return res.status(403).json({
+        status: 'fail',
+        message: 'Bạn không có quyền truy cập thông tin đơn đặt xe này!',
+      });
+    }
     res.status(500).json({
       status: 'error',
       message: 'Lỗi lấy thông tin chi tiết đơn hàng!',
@@ -199,11 +107,7 @@ export const getOrderById = async (req, res) => {
 // 4. [GET] /api/v1/orders - Xem toàn bộ danh sách đặt xe toàn Showroom (Chỉ Admin)
 export const getAllOrders = async (req, res) => {
   try {
-    const orderRepository = AppDataSource.getRepository(Order);
-    const orders = await orderRepository.find({
-      relations: ['user', 'orderItems', 'orderItems.product'],
-      order: { createdAt: 'DESC' },
-    });
+    const orders = await orderService.getAllOrders();
 
     res.status(200).json({
       status: 'success',
@@ -224,23 +128,10 @@ export const getAllOrders = async (req, res) => {
 // 5. [PATCH] /api/v1/orders/:id - Cập nhật Trạng thái đặt xe hoặc thanh toán cọc (Chỉ Admin)
 export const updateOrderStatus = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { status, paymentStatus } = req.body;
-
-    const orderRepository = AppDataSource.getRepository(Order);
-    const order = await orderRepository.findOneBy({ id: Number(id) });
-
-    if (!order) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'Không tìm thấy đơn đặt hàng để cập nhật!',
-      });
-    }
-
-    if (status) order.status = status;
-    if (paymentStatus) order.paymentStatus = paymentStatus;
-
-    const updatedOrder = await orderRepository.save(order);
+    const updatedOrder = await orderService.updateOrderStatus(
+      Number(req.params.id),
+      req.body
+    );
 
     res.status(200).json({
       status: 'success',
@@ -251,6 +142,12 @@ export const updateOrderStatus = async (req, res) => {
     });
   } catch (error) {
     console.error('Lỗi updateOrderStatus:', error);
+    if (error.message === 'ORDER_NOT_FOUND') {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Không tìm thấy đơn đặt hàng để cập nhật!',
+      });
+    }
     res.status(500).json({
       status: 'error',
       message: 'Có lỗi xảy ra trên Server khi cập nhật trạng thái!',
