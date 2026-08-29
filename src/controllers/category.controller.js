@@ -1,14 +1,9 @@
-import { AppDataSource } from '../config/data-source.js';
-import { Category } from '../entities/Category.js';
-import { slugify } from '../utils/slugify.js';
+import { categoryService } from '../services/category.service.js';
 
 // 1. [GET] /api/v1/categories - Lấy tất cả danh mục sản phẩm
 export const getCategories = async (req, res) => {
   try {
-    const categoryRepository = AppDataSource.getRepository(Category);
-    const categories = await categoryRepository.find({
-      order: { createdAt: 'DESC' },
-    });
+    const categories = await categoryService.getAll();
 
     res.status(200).json({
       status: 'success',
@@ -30,44 +25,33 @@ export const getCategories = async (req, res) => {
 export const createCategory = async (req, res) => {
   try {
     const { name, description, image } = req.body;
+    
+    // Gọi xuống Service để xử lý tạo danh mục
+    const category = await categoryService.create({ name, description, image });
 
-    if (!name) {
+    res.status(201).json({
+      status: 'success',
+      message: 'Tạo danh mục mới thành công! 🎉',
+      data: {
+        category,
+      },
+    });
+  } catch (error) {
+    console.error('Lỗi createCategory:', error);
+    
+    if (error.message === 'MISSING_NAME') {
       return res.status(400).json({
         status: 'fail',
         message: 'Tên danh mục không được để trống!',
       });
     }
-
-    const categoryRepository = AppDataSource.getRepository(Category);
-
-    // Kiểm tra tên danh mục trùng lặp
-    const slug = slugify(name);
-    const existingCategory = await categoryRepository.findOneBy({ slug });
-    if (existingCategory) {
+    if (error.message === 'CATEGORY_EXISTS') {
       return res.status(400).json({
         status: 'fail',
         message: 'Danh mục này đã tồn tại!',
       });
     }
 
-    const newCategory = categoryRepository.create({
-      name,
-      slug,
-      description,
-      image,
-    });
-
-    const savedCategory = await categoryRepository.save(newCategory);
-
-    res.status(201).json({
-      status: 'success',
-      message: 'Tạo danh mục mới thành công! 🎉',
-      data: {
-        category: savedCategory,
-      },
-    });
-  } catch (error) {
-    console.error('Lỗi createCategory:', error);
     res.status(500).json({
       status: 'error',
       message: 'Có lỗi xảy ra trên Server khi tạo danh mục!',

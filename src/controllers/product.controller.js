@@ -1,95 +1,19 @@
-import { AppDataSource } from '../config/data-source.js';
-import { Product } from '../entities/Product.js';
-import { Category } from '../entities/Category.js';
-import { slugify } from '../utils/slugify.js';
+import { productService } from '../services/product.service.js';
 
-// 1. [GET] /api/v1/products - Lấy danh sách sản phẩm (Hỗ trợ Lọc, Tìm kiếm, Phân trang, Sắp xếp)
+// 1. [GET] /api/v1/products - Lấy danh sách sản phẩm
 export const getProducts = async (req, res) => {
   try {
-    const {
-      search,
-      category,
-      brand,
-      nicotine,
-      minPrice,
-      maxPrice,
-      isFeatured,
-      sort, // 'price_asc', 'price_desc', 'newest'
-      page = 1,
-      limit = 12,
-    } = req.query;
-
-    const productRepository = AppDataSource.getRepository(Product);
-    
-    // Sử dụng QueryBuilder để dễ dàng thêm các điều kiện lọc động
-    const queryBuilder = productRepository
-      .createQueryBuilder('product')
-      .leftJoinAndSelect('product.category', 'category'); // Join bảng Category để lấy thông tin danh mục
-
-    // 🔍 A. Điều kiện tìm kiếm (Search) theo Tên, Hãng, Hương vị
-    if (search) {
-      queryBuilder.andWhere(
-        '(product.name ILIKE :search OR product.brand ILIKE :search OR product.flavor ILIKE :search)',
-        { search: `%${search}%` }
-      );
-    }
-
-    // 📂 B. Lọc theo Slug Danh mục
-    if (category) {
-      queryBuilder.andWhere('category.slug = :category', { category });
-    }
-
-    // 🏷️ C. Lọc theo Thương hiệu
-    if (brand) {
-      queryBuilder.andWhere('product.brand = :brand', { brand });
-    }
-
-    // ⚡ D. Lọc theo nồng độ nicotine
-    if (nicotine) {
-      queryBuilder.andWhere('product.nicotine = :nicotine', { nicotine });
-    }
-
-    // 💵 E. Lọc theo giá bán (Min - Max)
-    if (minPrice) {
-      queryBuilder.andWhere('product.price >= :minPrice', { minPrice: Number(minPrice) });
-    }
-    if (maxPrice) {
-      queryBuilder.andWhere('product.price <= :maxPrice', { maxPrice: Number(maxPrice) });
-    }
-
-    // ⭐ F. Lọc sản phẩm nổi bật
-    if (isFeatured !== undefined) {
-      queryBuilder.andWhere('product.isFeatured = :isFeatured', { isFeatured: isFeatured === 'true' });
-    }
-
-    // ⇅ G. Sắp xếp (Sorting)
-    if (sort === 'price_asc') {
-      queryBuilder.orderBy('product.price', 'ASC');
-    } else if (sort === 'price_desc') {
-      queryBuilder.orderBy('product.price', 'DESC');
-    } else {
-      queryBuilder.orderBy('product.createdAt', 'DESC'); // Mặc định: Mới nhất lên trước
-    }
-
-    // 📄 H. Phân trang (Pagination)
-    const pageNum = Number(page);
-    const limitNum = Number(limit);
-    const skip = (pageNum - 1) * limitNum;
-
-    queryBuilder.skip(skip).take(limitNum);
-
-    // Chạy truy vấn lấy danh sách và tổng số lượng
-    const [products, total] = await queryBuilder.getManyAndCount();
+    const result = await productService.getAll(req.query);
 
     res.status(200).json({
       status: 'success',
-      page: pageNum,
-      limit: limitNum,
-      totalCount: total,
-      totalPages: Math.ceil(total / limitNum),
-      results: products.length,
+      page: result.pageNum,
+      limit: result.limitNum,
+      totalCount: result.total,
+      totalPages: Math.ceil(result.total / result.limitNum),
+      results: result.products.length,
       data: {
-        products,
+        products: result.products,
       },
     });
   } catch (error) {
@@ -105,12 +29,7 @@ export const getProducts = async (req, res) => {
 export const getProductBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
-
-    const productRepository = AppDataSource.getRepository(Product);
-    const product = await productRepository.findOne({
-      where: { slug },
-      relations: ['category'], // Lấy thông tin danh mục kèm theo
-    });
+    const product = await productService.getBySlug(slug);
 
     if (!product) {
       return res.status(404).json({
@@ -137,67 +56,7 @@ export const getProductBySlug = async (req, res) => {
 // 3. [POST] /api/v1/products - Tạo sản phẩm mới (Chỉ Admin)
 export const createProduct = async (req, res) => {
   try {
-    const {
-      name,
-      price,
-      originalPrice,
-      description,
-      image,
-      images,
-      stock,
-      brand,
-      nicotine,
-      flavor,
-      isFeatured,
-      categoryId,
-    } = req.body;
-
-    if (!name || !price || !categoryId) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Tên, giá bán và danh mục là thông tin bắt buộc!',
-      });
-    }
-
-    const productRepository = AppDataSource.getRepository(Product);
-    const categoryRepository = AppDataSource.getRepository(Category);
-
-    // Kiểm tra Danh mục có tồn tại không
-    const category = await categoryRepository.findOneBy({ id: categoryId });
-    if (!category) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'Danh mục được chọn không tồn tại!',
-      });
-    }
-
-    // Tạo slug
-    const slug = slugify(name);
-    const existingProduct = await productRepository.findOneBy({ slug });
-    if (existingProduct) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Tên sản phẩm này đã được sử dụng (slug trùng lặp)!',
-      });
-    }
-
-    const newProduct = productRepository.create({
-      name,
-      slug,
-      price,
-      originalPrice,
-      description,
-      image,
-      images,
-      stock,
-      brand,
-      nicotine,
-      flavor,
-      isFeatured,
-      category, // Gán quan hệ Category
-    });
-
-    const savedProduct = await productRepository.save(newProduct);
+    const savedProduct = await productService.create(req.body);
 
     res.status(201).json({
       status: 'success',
@@ -208,6 +67,26 @@ export const createProduct = async (req, res) => {
     });
   } catch (error) {
     console.error('Lỗi createProduct:', error);
+    
+    if (error.message === 'MISSING_FIELDS') {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Tên, giá bán và danh mục là thông tin bắt buộc!',
+      });
+    }
+    if (error.message === 'CATEGORY_NOT_FOUND') {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Danh mục được chọn không tồn tại!',
+      });
+    }
+    if (error.message === 'PRODUCT_EXISTS') {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Tên sản phẩm này đã được sử dụng (slug trùng lặp)!',
+      });
+    }
+
     res.status(500).json({
       status: 'error',
       message: 'Có lỗi xảy ra trên Server khi tạo sản phẩm!',
