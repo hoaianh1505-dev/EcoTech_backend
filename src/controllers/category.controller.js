@@ -58,3 +58,68 @@ export const createCategory = async (req, res) => {
     });
   }
 };
+
+// 3. [PUT] /api/v1/categories/:id - Cập nhật danh mục (Chỉ Admin)
+export const updateCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, image } = req.body;
+
+    const category = await categoryService.update(id, { name, description, image });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Cập nhật danh mục phân khúc thành công!',
+      data: {
+        category,
+      },
+    });
+  } catch (error) {
+    console.error('Lỗi updateCategory:', error);
+
+    if (error.message === 'CATEGORY_NOT_FOUND') {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Không tìm thấy danh mục phân khúc cần cập nhật!',
+      });
+    }
+    if (error.message === 'CATEGORY_EXISTS') {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Tên danh mục phân khúc mới đã tồn tại!',
+      });
+    }
+
+    res.status(500).json({
+      status: 'error',
+      message: 'Có lỗi xảy ra trên Server khi cập nhật danh mục!',
+    });
+  }
+};
+
+// 4. [DELETE] /api/v1/categories/:id - Xóa danh mục (Chỉ Admin)
+export const deleteCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await categoryService.delete(id);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Xóa danh mục phân khúc thành công!',
+    });
+  } catch (error) {
+    console.error('Lỗi deleteCategory:', error);
+
+    if (error.message === 'CATEGORY_NOT_FOUND') {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Không tìm thấy danh mục phân khúc cần xóa!',
+      });
+    }
+
+    res.status(500).json({
+      status: 'error',
+      message: 'Có lỗi xảy ra trên Server khi xóa danh mục!',
+    });
+  }
+};

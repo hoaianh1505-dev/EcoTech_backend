@@ -11,10 +11,15 @@ export const aiService = {
 
     // 1. Quét thông tin xe từ database để làm ngữ cảnh
     const productRepository = AppDataSource.getRepository(Product);
-    const products = await productRepository.find({ relations: ['category'] });
+    const products = await productRepository.find({
+      relations: {
+        category: true,
+        brand: true
+      }
+    });
 
     const formattedCars = products.map((p, idx) => (
-      `${idx + 1}. Tên xe: ${p.name}, Hãng: ${p.brand}, Giá bán: ${Number(p.price).toLocaleString('vi-VN')}đ, Thông số động cơ/pin: ${p.nicotine || 'Chưa cập nhật'}, Màu sắc/Nội thất: ${p.flavor || 'Chưa cập nhật'}, Số lượng sẵn có: ${p.stock}`
+      `${idx + 1}. Tên xe: ${p.name}, Hãng: ${p.brand?.name || 'Chưa cập nhật'}, Giá bán: ${Number(p.price).toLocaleString('vi-VN')}đ, Thông số động cơ/pin: ${p.engine || 'Chưa cập nhật'}, Màu sắc/Nội thất: ${p.color || 'Chưa cập nhật'}, Số lượng sẵn có: ${p.stock}`
     )).join('\n');
 
     // 2. Thiết lập System Prompt

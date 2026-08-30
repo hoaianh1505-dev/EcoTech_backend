@@ -50,20 +50,15 @@ export const Product = new EntitySchema({
       type: 'int',
       default: 0,             // Số lượng còn trong kho
     },
-    brand: {
+    engine: {
       type: 'varchar',
       length: 100,
-      nullable: true,         // Hãng sản xuất (OXVA, Aspire, Tokyo, Vaporesso...)
+      nullable: true,         // Thông số động cơ hoặc dung lượng pin, quãng đường (VD: Pin 88 kWh, Động cơ V8...)
     },
-    nicotine: {
-      type: 'varchar',
-      length: 50,
-      nullable: true,         // Nồng độ Nicotine (VD: 3mg, 30mg, 50mg)
-    },
-    flavor: {
+    color: {
       type: 'varchar',
       length: 100,
-      nullable: true,         // Hương vị (VD: Dưa hấu lạnh, Xoài đào, Bạc hà...)
+      nullable: true,         // Màu ngoại thất / Nội thất (VD: Trắng / Nội thất Đen)
     },
     isFeatured: {
       type: 'boolean',
@@ -86,6 +81,12 @@ export const Product = new EntitySchema({
       target: 'Category',     // Liên kết tới Entity Category
       joinColumn: { name: 'categoryId' }, // Tên cột khóa ngoại trong PostgreSQL
       onDelete: 'SET NULL',   // Nếu xóa danh mục thì cột categoryId của sản phẩm về NULL (không bị mất SP)
+    },
+    brand: {
+      type: 'many-to-one',    // Nhiều sản phẩm thuộc về 1 Hãng xe
+      target: 'Brand',        // Liên kết tới Entity Brand
+      joinColumn: { name: 'brandId' }, // Tên cột khóa ngoại trong PostgreSQL
+      onDelete: 'SET NULL',   // Nếu xóa Hãng xe thì cột brandId của sản phẩm về NULL
     },
   },
 });

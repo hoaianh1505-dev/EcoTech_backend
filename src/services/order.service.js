@@ -86,7 +86,11 @@ export const orderService = {
     const orderRepository = AppDataSource.getRepository(Order);
     return await orderRepository.find({
       where: { user: { id: userId } },
-      relations: ['orderItems', 'orderItems.product'],
+      relations: {
+        orderItems: {
+          product: true
+        }
+      },
       order: { createdAt: 'DESC' },
     });
   },
@@ -96,7 +100,12 @@ export const orderService = {
     const orderRepository = AppDataSource.getRepository(Order);
     const order = await orderRepository.findOne({
       where: { id: orderId },
-      relations: ['user', 'orderItems', 'orderItems.product'],
+      relations: {
+        user: true,
+        orderItems: {
+          product: true
+        }
+      },
     });
 
     if (!order) {
@@ -115,7 +124,12 @@ export const orderService = {
   getAllOrders: async () => {
     const orderRepository = AppDataSource.getRepository(Order);
     return await orderRepository.find({
-      relations: ['user', 'orderItems', 'orderItems.product'],
+      relations: {
+        user: true,
+        orderItems: {
+          product: true
+        }
+      },
       order: { createdAt: 'DESC' },
     });
   },

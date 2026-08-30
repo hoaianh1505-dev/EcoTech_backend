@@ -93,3 +93,72 @@ export const createProduct = async (req, res) => {
     });
   }
 };
+
+// 4. [PUT] /api/v1/products/:id - Cập nhật thông tin xe hơi (Chỉ Admin)
+export const updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedProduct = await productService.update(id, req.body);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Cập nhật thông tin xe hơi thành công!',
+      data: {
+        product: updatedProduct,
+      },
+    });
+  } catch (error) {
+    console.error('Lỗi updateProduct:', error);
+
+    if (error.message === 'PRODUCT_NOT_FOUND') {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Không tìm thấy xe hơi cần cập nhật!',
+      });
+    }
+    if (error.message === 'CATEGORY_NOT_FOUND') {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Danh mục phân khúc mới không tồn tại!',
+      });
+    }
+    if (error.message === 'PRODUCT_EXISTS') {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Tên xe hơi mới bị trùng với một xe khác đã có!',
+      });
+    }
+
+    res.status(500).json({
+      status: 'error',
+      message: 'Có lỗi xảy ra trên Server khi cập nhật xe hơi!',
+    });
+  }
+};
+
+// 5. [DELETE] /api/v1/products/:id - Xóa xe hơi khỏi Showroom (Chỉ Admin)
+export const deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await productService.delete(id);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Đã xóa xe hơi khỏi Showroom thành công!',
+    });
+  } catch (error) {
+    console.error('Lỗi deleteProduct:', error);
+
+    if (error.message === 'PRODUCT_NOT_FOUND') {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Không tìm thấy xe hơi cần xóa!',
+      });
+    }
+
+    res.status(500).json({
+      status: 'error',
+      message: 'Có lỗi xảy ra trên Server khi xóa xe hơi!',
+    });
+  }
+};

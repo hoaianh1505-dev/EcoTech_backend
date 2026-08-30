@@ -1,6 +1,7 @@
 import { AppDataSource } from '../config/data-source.js';
 import { Product } from '../entities/Product.js';
 import { Category } from '../entities/Category.js';
+import { Brand } from '../entities/Brand.js';
 import { slugify } from '../utils/slugify.js';
 
 export const productService = {
@@ -10,7 +11,7 @@ export const productService = {
       search,
       category,
       brand,
-      nicotine,
+      engine,
       minPrice,
       maxPrice,
       isFeatured,
@@ -22,12 +23,13 @@ export const productService = {
     const productRepository = AppDataSource.getRepository(Product);
     const queryBuilder = productRepository
       .createQueryBuilder('product')
-      .leftJoinAndSelect('product.category', 'category');
+      .leftJoinAndSelect('product.category', 'category')
+      .leftJoinAndSelect('product.brand', 'brand');
 
-    // Tìm kiếm
+    // Tìm kiếm (Mở rộng tìm kiếm sang hãng xe brand.name)
     if (search) {
       queryBuilder.andWhere(
-        '(product.name ILIKE :search OR product.brand ILIKE :search OR product.description ILIKE :search)',
+        '(product.name ILIKE :search OR brand.name ILIKE :search OR product.description ILIKE :search)',
         { search: `%${search}%` }
       );
     }
@@ -37,14 +39,14 @@ export const productService = {
       queryBuilder.andWhere('category.slug = :category', { category });
     }
 
-    // Hãng xe (Brand)
+    // Lọc Hãng xe (Brand slug)
     if (brand) {
-      queryBuilder.andWhere('product.brand = :brand', { brand });
+      queryBuilder.andWhere('brand.slug = :brand', { brand });
     }
 
-    // Động cơ/Pin (Nicotine cũ)
-    if (nicotine) {
-      queryBuilder.andWhere('product.nicotine = :nicotine', { nicotine });
+    // Động cơ/Pin (Engine mới)
+    if (engine) {
+      queryBuilder.andWhere('product.engine = :engine', { engine });
     }
 
     // 💵 Giá bán
@@ -91,7 +93,10 @@ export const productService = {
     const productRepository = AppDataSource.getRepository(Product);
     return await productRepository.findOne({
       where: { slug },
-      relations: ['category'],
+      relations: {
+        category: true,
+        brand: true
+      },
     });
   },
 
@@ -105,24 +110,31 @@ export const productService = {
       image,
       images,
       stock,
-      brand,
-      nicotine,
-      flavor,
+      brandId,
+      engine,
+      color,
       isFeatured,
       categoryId,
     } = productData;
 
-    if (!name || !price || !categoryId) {
+    if (!name || !price || !categoryId || !brandId) {
       throw new Error('MISSING_FIELDS');
     }
 
     const productRepository = AppDataSource.getRepository(Product);
     const categoryRepository = AppDataSource.getRepository(Category);
+    const brandRepository = AppDataSource.getRepository(Brand);
 
     // Kiểm tra danh mục
-    const category = await categoryRepository.findOneBy({ id: categoryId });
+    const category = await categoryRepository.findOneBy({ id: Number(categoryId) });
     if (!category) {
       throw new Error('CATEGORY_NOT_FOUND');
+    }
+
+    // Kiểm tra hãng xe
+    const brandObj = await brandRepository.findOneBy({ id: Number(brandId) });
+    if (!brandObj) {
+      throw new Error('BRAND_NOT_FOUND');
     }
 
     // Kiểm tra trùng slug
@@ -141,13 +153,82 @@ export const productService = {
       image,
       images,
       stock,
-      brand,
-      nicotine,
-      flavor,
+      engine,
+      color,
       isFeatured,
       category,
+      brand: brandObj,
     });
 
     return await productRepository.save(newProduct);
+  },
+
+  // 4. Admin cập nhật thông tin xe hơi
+  update: async (id, updateData) => {
+    const productRepository = AppDataSource.getRepository(Product);
+    const categoryRepository = AppDataSource.getRepository(Category);
+    const brandRepository = AppDataSource.getRepository(Brand);
+
+    const product = await productRepository.findOne({
+      where: { id: Number(id) },
+      relations: {
+        category: true,
+        brand: true
+      }
+    });
+    
+    if (!product) {
+      throw new Error('PRODUCT_NOT_FOUND');
+    }
+
+    const { categoryId, brandId, name, ...rest } = updateData;
+
+    // Nếu cập nhật danh mục phân khúc
+    if (categoryId) {
+      const category = await categoryRepository.findOneBy({ id: Number(categoryId) });
+      if (!category) {
+        throw new Error('CATEGORY_NOT_FOUND');
+      }
+      product.category = category;
+    }
+
+    // Nếu cập nhật hãng xe
+    if (brandId) {
+      const brandObj = await brandRepository.findOneBy({ id: Number(brandId) });
+      if (!brandObj) {
+        throw new Error('BRAND_NOT_FOUND');
+      }
+      product.brand = brandObj;
+    }
+
+    // Nếu đổi tên xe -> cập nhật lại slug xe
+    if (name) {
+      product.name = name;
+      product.slug = slugify(name);
+      
+      // Kiểm tra xem slug mới có bị trùng với xe nào khác không
+      const existingProduct = await productRepository.findOne({
+        where: { slug: product.slug },
+      });
+      if (existingProduct && existingProduct.id !== Number(id)) {
+        throw new Error('PRODUCT_EXISTS');
+      }
+    }
+
+    // Đổ các dữ liệu còn lại vào
+    Object.assign(product, rest);
+
+    return await productRepository.save(product);
+  },
+
+  // 5. Admin xóa xe hơi khỏi Showroom
+  delete: async (id) => {
+    const productRepository = AppDataSource.getRepository(Product);
+    const product = await productRepository.findOneBy({ id: Number(id) });
+    if (!product) {
+      throw new Error('PRODUCT_NOT_FOUND');
+    }
+
+    return await productRepository.remove(product);
   }
 };
