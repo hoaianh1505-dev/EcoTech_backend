@@ -36,6 +36,19 @@ export const User = new EntitySchema({
       length: 500,
       nullable: true,         // Có thể để trống (chưa có ảnh đại diện)
     },
+    isVerified: {
+      type: 'boolean',
+      default: false,         // Trạng thái kích hoạt tài khoản qua email
+    },
+    verificationCode: {
+      type: 'varchar',
+      length: 255,
+      nullable: true,         // Mã OTP kích hoạt tài khoản
+    },
+    verificationExpires: {
+      type: 'timestamp',
+      nullable: true,         // Thời gian hết hạn mã OTP
+    },
     createdAt: {
       type: 'timestamp',
       createDate: true,       // Tự động lưu ngày giờ tạo tài khoản

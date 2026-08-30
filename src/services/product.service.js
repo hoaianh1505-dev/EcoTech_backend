@@ -24,7 +24,7 @@ export const productService = {
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.category', 'category');
 
-    // 🔍 Tìm kiếm
+    // Tìm kiếm
     if (search) {
       queryBuilder.andWhere(
         '(product.name ILIKE :search OR product.brand ILIKE :search OR product.description ILIKE :search)',
@@ -32,17 +32,17 @@ export const productService = {
       );
     }
 
-    // 📂 Lọc phân khúc (Category)
+    // Lọc phân khúc (Category)
     if (category) {
       queryBuilder.andWhere('category.slug = :category', { category });
     }
 
-    // 🏷️ Hãng xe (Brand)
+    // Hãng xe (Brand)
     if (brand) {
       queryBuilder.andWhere('product.brand = :brand', { brand });
     }
 
-    // ⚡ Động cơ/Pin (Nicotine cũ)
+    // Động cơ/Pin (Nicotine cũ)
     if (nicotine) {
       queryBuilder.andWhere('product.nicotine = :nicotine', { nicotine });
     }
@@ -55,12 +55,12 @@ export const productService = {
       queryBuilder.andWhere('product.price <= :maxPrice', { maxPrice: Number(maxPrice) });
     }
 
-    // ⭐ Nổi bật
+    // Nổi bật
     if (isFeatured !== undefined) {
       queryBuilder.andWhere('product.isFeatured = :isFeatured', { isFeatured: isFeatured === 'true' });
     }
 
-    // ⇅ Sắp xếp
+    // Sắp xếp
     if (sort === 'price_asc') {
       queryBuilder.orderBy('product.price', 'ASC');
     } else if (sort === 'price_desc') {
