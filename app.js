@@ -14,6 +14,7 @@ import orderRoutes from './src/routes/order.routes.js';
 import userRoutes from './src/routes/user.routes.js';
 import brandRoutes from './src/routes/brand.routes.js';
 import uploadRoutes from './src/routes/upload.routes.js';
+import { corsOptions } from './src/config/cors.js';
 
 // 1. Khởi tạo Express app
 const app = express();
@@ -45,7 +46,7 @@ const secureLimiter = rateLimit({
 
 // 3. Middlewares
 app.use(helmet());
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));

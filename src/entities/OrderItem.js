@@ -26,7 +26,7 @@ export const OrderItem = new EntitySchema({
     },
   },
 
-  // 🔗 THIẾT LẬP QUAN HỆ KHÓA NGOẠI (RELATIONSHIP)
+  // THIẾT LẬP QUAN HỆ KHÓA NGOẠI (RELATIONSHIP)
   relations: {
     order: {
       type: 'many-to-one',    // Nhiều món hàng thuộc về 1 Đơn hàng

@@ -74,7 +74,7 @@ export const Product = new EntitySchema({
     },
   },
 
-  // 🔗 THIẾT LẬP QUAN HỆ KHÓA NGOẠI (RELATIONSHIP)
+  //  THIẾT LẬP QUAN HỆ KHÓA NGOẠI (RELATIONSHIP)
   relations: {
     category: {
       type: 'many-to-one',    // Nhiều sản phẩm thuộc về 1 Danh mục

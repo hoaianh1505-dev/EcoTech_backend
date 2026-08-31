@@ -49,7 +49,7 @@ export const Order = new EntitySchema({
     },
   },
 
-  // 🔗 THIẾT LẬP QUAN HỆ KHÓA NGOẠI (RELATIONSHIP)
+  // THIẾT LẬP QUAN HỆ KHÓA NGOẠI (RELATIONSHIP)
   relations: {
     user: {
       type: 'many-to-one',    // 1 User có thể tạo nhiều Đơn hàng
