@@ -100,3 +100,82 @@ export const deleteUser = async (req, res) => {
     });
   }
 };
+
+// 4. [PUT] /api/v1/users/profile - Khách hàng tự cập nhật thông tin cá nhân
+export const updateMe = async (req, res) => {
+  try {
+    const userId = req.user.id; // Lấy từ middleware protect xác thực
+    const { name, avatar } = req.body;
+
+    const updatedUser = await userService.updateProfile(userId, { name, avatar });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Cập nhật thông tin cá nhân thành công!',
+      data: {
+        user: updatedUser,
+      },
+    });
+  } catch (error) {
+    console.error('Lỗi updateMe:', error);
+
+    if (error.message === 'USER_NOT_FOUND') {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Không tìm thấy thông tin tài khoản người dùng!',
+      });
+    }
+
+    res.status(500).json({
+      status: 'error',
+      message: 'Có lỗi xảy ra trên Server khi cập nhật thông tin cá nhân!',
+    });
+  }
+};
+
+// 5. [PUT] /api/v1/users/password - Khách hàng tự đổi mật khẩu tài khoản
+export const updateMyPassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { oldPassword, newPassword } = req.body;
+
+    await userService.updatePassword(userId, { oldPassword, newPassword });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Đổi mật khẩu tài khoản thành công! 🎉',
+    });
+  } catch (error) {
+    console.error('Lỗi updateMyPassword:', error);
+
+    if (error.message === 'MISSING_PASSWORD_FIELDS') {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Vui lòng điền đầy đủ mật khẩu cũ và mật khẩu mới!',
+      });
+    }
+    if (error.message === 'PASSWORD_TOO_SHORT') {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Mật khẩu mới phải có ít nhất 6 ký tự!',
+      });
+    }
+    if (error.message === 'INCORRECT_OLD_PASSWORD') {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Mật khẩu cũ không chính xác!',
+      });
+    }
+    if (error.message === 'USER_NOT_FOUND') {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Không tìm thấy thông tin tài khoản người dùng!',
+      });
+    }
+
+    res.status(500).json({
+      status: 'error',
+      message: 'Có lỗi xảy ra trên Server khi đổi mật khẩu!',
+    });
+  }
+};

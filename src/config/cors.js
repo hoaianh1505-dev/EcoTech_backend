@@ -7,7 +7,7 @@ const whitelist = [
   'http://127.0.0.1:3000',
   'http://127.0.0.1:5173',
 ];
-
+` `
 // Thêm tên miền thực tế (nếu được cấu hình trong file .env)
 if (process.env.CLIENT_URL) {
   // Hỗ trợ cấu hình nhiều domain cách nhau bởi dấu phẩy

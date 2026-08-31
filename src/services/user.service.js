@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs';
 import { AppDataSource } from '../config/data-source.js';
 import { User } from '../entities/User.js';
 
@@ -53,5 +54,53 @@ export const userService = {
     }
 
     return await userRepository.remove(user);
+  },
+
+  // 4. Khách hàng tự cập nhật thông tin cá nhân (Tên, Ảnh đại diện)
+  updateProfile: async (id, { name, avatar }) => {
+    const userRepository = AppDataSource.getRepository(User);
+    const user = await userRepository.findOneBy({ id: Number(id) });
+
+    if (!user) {
+      throw new Error('USER_NOT_FOUND');
+    }
+
+    if (name) user.name = name;
+    if (avatar !== undefined) user.avatar = avatar;
+
+    const updatedUser = await userRepository.save(user);
+    delete updatedUser.password;
+    return updatedUser;
+  },
+
+  // 5. Khách hàng tự thay đổi mật khẩu tài khoản
+  updatePassword: async (id, { oldPassword, newPassword }) => {
+    if (!oldPassword || !newPassword) {
+      throw new Error('MISSING_PASSWORD_FIELDS');
+    }
+
+    if (newPassword.length < 6) {
+      throw new Error('PASSWORD_TOO_SHORT');
+    }
+
+    const userRepository = AppDataSource.getRepository(User);
+    const user = await userRepository.findOneBy({ id: Number(id) });
+
+    if (!user) {
+      throw new Error('USER_NOT_FOUND');
+    }
+
+    // Kiểm tra mật khẩu cũ nhập vào
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      throw new Error('INCORRECT_OLD_PASSWORD');
+    }
+
+    // Mã hóa và lưu mật khẩu mới
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+
+    await userRepository.save(user);
+    return true;
   }
 };

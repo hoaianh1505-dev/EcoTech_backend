@@ -42,16 +42,7 @@ app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/upload', uploadRoutes);
 
-// 4. Route kiểm tra sức khỏe server (Health Check)
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'success',
-    message: 'EcoTech Server is running smoothly! 🚀',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// 4. Xử lý 404 Route không tồn tại
+// 3. Xử lý 404 Route không tồn tại
 app.use((req, res) => {
   res.status(404).json({
     status: 'error',
@@ -59,17 +50,14 @@ app.use((req, res) => {
   });
 });
 
-// 5. Khởi chạy Server
+// 4. Khởi chạy Server
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
   await connectDB(); // Kết nối Database
-  
+
   app.listen(PORT, () => {
-    console.log(`=================================`);
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`🔍 Health Check: http://localhost:${PORT}/health`);
-    console.log(`=================================`);
+    console.log(`Server running on http://localhost:${PORT}`);
   });
 };
 
