@@ -13,6 +13,7 @@ import orderRoutes from './src/routes/order.routes.js';
 import userRoutes from './src/routes/user.routes.js';
 import brandRoutes from './src/routes/brand.routes.js';
 import uploadRoutes from './src/routes/upload.routes.js';
+import cartRoutes from './src/routes/cart.routes.js';
 import { corsOptions } from './src/config/cors.js';
 import { globalLimiter, secureLimiter } from './src/config/rate-limiter.js';
 
@@ -41,6 +42,7 @@ app.use('/api/v1/ai', aiRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/upload', uploadRoutes);
+app.use('/api/v1/cart', cartRoutes);
 
 // 3. Xử lý 404 Route không tồn tại
 app.use((req, res) => {
