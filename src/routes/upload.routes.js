@@ -1,7 +1,7 @@
 import express from 'express';
 import { uploadSingleImage } from '../controllers/upload.controller.js';
 import { upload } from '../middlewares/upload.middleware.js';
-import { protect, restrictTo } from '../middlewares/auth.middleware.js';
+import { protect, isAdmin } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
@@ -9,7 +9,7 @@ const router = express.Router();
 router.post(
   '/',
   protect,
-  restrictTo('admin'),
+  isAdmin,
   upload.single('image'), // Đọc file từ trường name="image" trong multipart/form-data
   uploadSingleImage
 );

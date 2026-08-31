@@ -45,7 +45,7 @@ export const protect = async (req, res, next) => {
   }
 };
 
-// Middleware kiểm tra Phân quyền Admin
+// Middleware kiểm tra Phân quyền Admin (Hỗ trợ mở rộng nhiều role như staff, editor...)
 export const restrictTo = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
@@ -56,4 +56,15 @@ export const restrictTo = (...roles) => {
     }
     next();
   };
+};
+
+// Middleware kiểm tra quyền Admin trực tiếp (Ngắn gọn, tiện lợi)
+export const isAdmin = (req, res, next) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({
+      status: 'fail',
+      message: 'Bạn không có quyền thực hiện thao tác này! Yêu cầu quyền quản trị viên (Admin).',
+    });
+  }
+  next();
 };

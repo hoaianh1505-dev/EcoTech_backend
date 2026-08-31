@@ -6,7 +6,7 @@ import {
   getAllOrders,
   updateOrderStatus,
 } from '../controllers/order.controller.js';
-import { protect, restrictTo } from '../middlewares/auth.middleware.js';
+import { protect, isAdmin } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
@@ -18,7 +18,7 @@ router.get('/my-orders', getMyOrders);         // Khách hàng xem lịch sử c
 router.get('/:id', getOrderById);              // Khách hàng/Admin xem chi tiết 1 đơn đặt cọc
 
 // Các API quản trị chỉ cho phép ADMIN truy cập
-router.get('/', restrictTo('admin'), getAllOrders);              // Admin xem danh sách đặt xe toàn hệ thống
-router.patch('/:id', restrictTo('admin'), updateOrderStatus);    // Admin duyệt đặt cọc, đổi trạng thái đơn
+router.get('/', isAdmin, getAllOrders);              // Admin xem danh sách đặt xe toàn hệ thống
+router.patch('/:id', isAdmin, updateOrderStatus);    // Admin duyệt đặt cọc, đổi trạng thái đơn
 
 export default router;

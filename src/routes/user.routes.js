@@ -1,6 +1,6 @@
 import express from 'express';
 import { getUsers, updateUserRole, deleteUser, updateMe, updateMyPassword } from '../controllers/user.controller.js';
-import { protect, restrictTo } from '../middlewares/auth.middleware.js';
+import { protect, isAdmin } from '../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
@@ -12,7 +12,7 @@ router.put('/profile', updateMe);                  // Tự cập nhật Họ tê
 router.put('/password', updateMyPassword);          // Tự thay đổi mật khẩu tài khoản
 
 // 👑 Phân hệ quản trị cao cấp (Bắt buộc phải có vai trò Admin)
-router.use(restrictTo('admin'));
+router.use(isAdmin);
 
 router.get('/', getUsers);                      // Lấy danh sách toàn bộ thành viên
 router.patch('/:id/role', updateUserRole);      // Thay đổi vai trò admin/user
