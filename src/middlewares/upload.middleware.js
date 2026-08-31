@@ -6,7 +6,7 @@ const storage = multer.memoryStorage();
 // 2. Bộ lọc chỉ chấp nhận các định dạng ảnh phổ biến
 const fileFilter = (req, file, cb) => {
   const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-  
+
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
