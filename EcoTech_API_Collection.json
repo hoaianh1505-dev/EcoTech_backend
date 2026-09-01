@@ -1,0 +1,467 @@
+{
+	"info": {
+		"_postman_id": "ecotech-api-collection-full-crud",
+		"name": "EcoTech Auto API Collection (Full CRUD)",
+		"description": "Bộ Collection chứa đầy đủ 100% các thao tác CRUD kiểm thử toàn bộ API Backend của hệ thống EcoTech Auto",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Authentication (Xác thực & Tài khoản)",
+			"item": [
+				{
+					"name": "POST Đăng ký tài khoản",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Hoài Anh\",\n  \"email\": \"user@gmail.com\",\n  \"password\": \"123456\"\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+					}
+				},
+				{
+					"name": "POST Kích hoạt tài khoản bằng mã OTP",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@gmail.com\",\n  \"code\": \"123456\"\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/auth/verify-email", "host": ["{{baseUrl}}"], "path": ["auth", "verify-email"] }
+					}
+				},
+				{
+					"name": "POST Gửi lại mã OTP kích hoạt",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@gmail.com\"\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/auth/resend-code", "host": ["{{baseUrl}}"], "path": ["auth", "resend-code"] }
+					}
+				},
+				{
+					"name": "POST Đăng nhập (Lấy Token)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@gmail.com\",\n  \"password\": \"123456\"\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+					}
+				},
+				{
+					"name": "POST Làm mới Token (Refresh Token)",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refreshToken\": \"paste_refresh_token_here\"\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/auth/refresh-token", "host": ["{{baseUrl}}"], "path": ["auth", "refresh-token"] }
+					}
+				},
+				{
+					"name": "GET Thông tin cá nhân (Me)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [],
+						"url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Users Profile & Admin Management",
+			"item": [
+				{
+					"name": "PUT Cập nhật Profile cá nhân",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Hoài Anh VIP\",\n  \"avatar\": \"https://ecotech-1505.s3.ap-southeast-2.amazonaws.com/uploads/avatar.png\"\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/users/profile", "host": ["{{baseUrl}}"], "path": ["users", "profile"] }
+					}
+				},
+				{
+					"name": "PUT Thay đổi Mật khẩu",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"oldPassword\": \"123456\",\n  \"newPassword\": \"654321\"\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/users/password", "host": ["{{baseUrl}}"], "path": ["users", "password"] }
+					}
+				},
+				{
+					"name": "GET Lấy tất cả User (Admin)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [],
+						"url": { "raw": "{{baseUrl}}/users", "host": ["{{baseUrl}}"], "path": ["users"] }
+					}
+				},
+				{
+					"name": "PUT Cập nhật quyền Admin/User (Admin)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"role\": \"admin\"\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/users/2/role", "host": ["{{baseUrl}}"], "path": ["users", "2", "role"] }
+					}
+				},
+				{
+					"name": "DELETE Xóa tài khoản User (Admin)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "DELETE",
+						"header": [],
+						"url": { "raw": "{{baseUrl}}/users/2", "host": ["{{baseUrl}}"], "path": ["users", "2"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Products CRUD (Sản phẩm Xe hơi)",
+			"item": [
+				{
+					"name": "GET Lấy danh sách xe (Search, Filter, Sort, Page)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/products?search=&category=&brand=&engine=&minPrice=&maxPrice=&sort=price_desc&page=1&limit=12",
+							"host": ["{{baseUrl}}"],
+							"path": ["products"],
+							"query": [
+								{ "key": "search", "value": "" },
+								{ "key": "category", "value": "" },
+								{ "key": "brand", "value": "" },
+								{ "key": "engine", "value": "" },
+								{ "key": "minPrice", "value": "" },
+								{ "key": "maxPrice", "value": "" },
+								{ "key": "sort", "value": "price_desc" },
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "12" }
+							]
+						}
+					}
+				},
+				{
+					"name": "GET Xem chi tiết 1 xe qua Slug",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": { "raw": "{{baseUrl}}/products/tesla-model-y-long-range-ban-2026", "host": ["{{baseUrl}}"], "path": ["products", "tesla-model-y-long-range-ban-2026"] }
+					}
+				},
+				{
+					"name": "POST Tạo xe hơi mới (Admin)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Tesla Model Y Long Range (Bản 2026)\",\n  \"price\": 1890000000,\n  \"originalPrice\": 2090000000,\n  \"description\": \"Mẫu SUV điện thông minh hàng đầu phân khúc với quãng đường 533km.\",\n  \"image\": \"https://ecotech-1505.s3.ap-southeast-2.amazonaws.com/uploads/sample.png\",\n  \"images\": [\"https://ecotech-1505.s3.ap-southeast-2.amazonaws.com/uploads/sample1.png\"],\n  \"stock\": 5,\n  \"engine\": \"Động cơ Điện kép (Dual Motor AWD)\",\n  \"color\": \"Trắng Ngọc Trai\",\n  \"isFeatured\": true,\n  \"categoryId\": 1,\n  \"brandId\": 1\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/products", "host": ["{{baseUrl}}"], "path": ["products"] }
+					}
+				},
+				{
+					"name": "PUT Cập nhật thông tin xe (Admin)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"price\": 1850000000,\n  \"stock\": 8,\n  \"isFeatured\": true\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/products/1", "host": ["{{baseUrl}}"], "path": ["products", "1"] }
+					}
+				},
+				{
+					"name": "DELETE Xóa sản phẩm xe (Admin)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "DELETE",
+						"header": [],
+						"url": { "raw": "{{baseUrl}}/products/1", "host": ["{{baseUrl}}"], "path": ["products", "1"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Categories CRUD (Phân khúc xe)",
+			"item": [
+				{
+					"name": "GET Tất cả Danh mục",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": { "raw": "{{baseUrl}}/categories", "host": ["{{baseUrl}}"], "path": ["categories"] }
+					}
+				},
+				{
+					"name": "POST Tạo Danh mục mới (Admin)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Xe Siêu Sang\",\n  \"description\": \"Các dòng xe siêu sang từ Châu Âu\",\n  \"image\": \"https://ecotech-1505.s3.ap-southeast-2.amazonaws.com/uploads/cat.png\"\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/categories", "host": ["{{baseUrl}}"], "path": ["categories"] }
+					}
+				},
+				{
+					"name": "PUT Sửa Danh mục (Admin)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Xe Siêu Sang VIP\"\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/categories/1", "host": ["{{baseUrl}}"], "path": ["categories", "1"] }
+					}
+				},
+				{
+					"name": "DELETE Xóa Danh mục (Admin)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "DELETE",
+						"header": [],
+						"url": { "raw": "{{baseUrl}}/categories/1", "host": ["{{baseUrl}}"], "path": ["categories", "1"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "5. Brands CRUD (Hãng xe)",
+			"item": [
+				{
+					"name": "GET Tất cả Hãng xe",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": { "raw": "{{baseUrl}}/brands", "host": ["{{baseUrl}}"], "path": ["brands"] }
+					}
+				},
+				{
+					"name": "POST Tạo Hãng xe mới (Admin)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Porsche\",\n  \"logo\": \"https://ecotech-1505.s3.ap-southeast-2.amazonaws.com/uploads/porsche.png\",\n  \"description\": \"Hãng xe thể thao hạng sang từ Đức\"\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/brands", "host": ["{{baseUrl}}"], "path": ["brands"] }
+					}
+				},
+				{
+					"name": "PUT Sửa Hãng xe (Admin)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"description\": \"Hãng siêu xe thể thao hàng đầu thế giới\"\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/brands/1", "host": ["{{baseUrl}}"], "path": ["brands", "1"] }
+					}
+				},
+				{
+					"name": "DELETE Xóa Hãng xe (Admin)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "DELETE",
+						"header": [],
+						"url": { "raw": "{{baseUrl}}/brands/1", "host": ["{{baseUrl}}"], "path": ["brands", "1"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "6. Cart CRUD (Giỏ hàng xe)",
+			"item": [
+				{
+					"name": "GET Xem Giỏ hàng",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [],
+						"url": { "raw": "{{baseUrl}}/cart", "host": ["{{baseUrl}}"], "path": ["cart"] }
+					}
+				},
+				{
+					"name": "POST Thêm xe vào Giỏ",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productId\": 1,\n  \"quantity\": 1\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/cart", "host": ["{{baseUrl}}"], "path": ["cart"] }
+					}
+				},
+				{
+					"name": "PUT Cập nhật số lượng trong Giỏ",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "PUT",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": 2\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/cart/1", "host": ["{{baseUrl}}"], "path": ["cart", "1"] }
+					}
+				},
+				{
+					"name": "DELETE Xóa mục khỏi Giỏ hàng",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "DELETE",
+						"header": [],
+						"url": { "raw": "{{baseUrl}}/cart/1", "host": ["{{baseUrl}}"], "path": ["cart", "1"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "7. Orders CRUD (Đặt cọc xe)",
+			"item": [
+				{
+					"name": "POST Tạo đơn đặt cọc xe mới",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 1\n    }\n  ],\n  \"shippingAddress\": \"123 Nguyễn Văn Linh, Quận 7, TP. Hồ Chí Minh\",\n  \"paymentMethod\": \"vnpay\",\n  \"notes\": \"Giao xe buổi sáng\"\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"] }
+					}
+				},
+				{
+					"name": "GET Lịch sử đặt cọc cá nhân",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [],
+						"url": { "raw": "{{baseUrl}}/orders/my-orders", "host": ["{{baseUrl}}"], "path": ["orders", "my-orders"] }
+					}
+				},
+				{
+					"name": "GET Xem chi tiết 1 đơn đặt cọc",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [],
+						"url": { "raw": "{{baseUrl}}/orders/1", "host": ["{{baseUrl}}"], "path": ["orders", "1"] }
+					}
+				},
+				{
+					"name": "GET Tất cả đơn đặt cọc Toàn Showroom (Admin)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "GET",
+						"header": [],
+						"url": { "raw": "{{baseUrl}}/orders", "host": ["{{baseUrl}}"], "path": ["orders"] }
+					}
+				},
+				{
+					"name": "PATCH Duyệt trạng thái đơn đặt cọc (Admin)",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "PATCH",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"completed\",\n  \"paymentStatus\": \"paid\"\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/orders/1", "host": ["{{baseUrl}}"], "path": ["orders", "1"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "8. Payment (Thanh toán VNPay)",
+			"item": [
+				{
+					"name": "POST Sinh link QR Code VNPay",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderId\": 1\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/payment/vnpay", "host": ["{{baseUrl}}"], "path": ["payment", "vnpay"] }
+					}
+				}
+			]
+		},
+		{
+			"name": "9. AI EcoBot & Upload S3",
+			"item": [
+				{
+					"name": "POST Chat tư vấn xe với AI Gemini",
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"message\": \"Tư vấn giúp tôi các dòng xe điện tầm giá dưới 2 tỷ có sẵn tại showroom\"\n}"
+						},
+						"url": { "raw": "{{baseUrl}}/ai/chat", "host": ["{{baseUrl}}"], "path": ["ai", "chat"] }
+					}
+				}
+			]
+		}
+	]
+}
