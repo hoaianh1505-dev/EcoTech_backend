@@ -82,7 +82,7 @@ export const productService = {
     const limitNum = Number(limit);
     const skip = (pageNum - 1) * limitNum;
 
-    // 5. Thực thi truy vấn bằng findAndCount thuần Object 100%
+    // 5. Thực thi truy vấn bằng findAndCount 
     const [products, total] = await productRepository.findAndCount({
       where: whereCondition,
       relations: {
@@ -190,7 +190,7 @@ export const productService = {
         brand: true
       }
     });
-    
+
     if (!product) {
       throw new Error('PRODUCT_NOT_FOUND');
     }
@@ -219,7 +219,7 @@ export const productService = {
     if (name) {
       product.name = name;
       product.slug = slugify(name);
-      
+
       // Kiểm tra xem slug mới có bị trùng với xe nào khác không
       const existingProduct = await productRepository.findOne({
         where: { slug: product.slug },
