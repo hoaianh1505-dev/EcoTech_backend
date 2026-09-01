@@ -24,7 +24,18 @@ export const User = new EntitySchema({
     password: {
       type: 'varchar',
       length: 255,
-      nullable: false,        // Mật khẩu đã được mã hóa Bcrypt
+      nullable: true,         // Có thể để trống nếu Đăng nhập qua Google OAuth
+    },
+    provider: {
+      type: 'enum',
+      enum: ['local', 'google', 'facebook'],
+      default: 'local',       // Loại tài khoản: Đăng ký thường (local) hoặc qua Google/Facebook
+    },
+    googleId: {
+      type: 'varchar',
+      length: 255,
+      nullable: true,         // ID định danh duy nhất của Google
+      unique: true,
     },
     role: {
       type: 'enum',
