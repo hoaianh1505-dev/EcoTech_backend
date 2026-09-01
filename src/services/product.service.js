@@ -1,3 +1,4 @@
+import { ILike, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import { AppDataSource } from '../config/data-source.js';
 import { Product } from '../entities/Product.js';
 import { Category } from '../entities/Category.js';
@@ -5,7 +6,7 @@ import { Brand } from '../entities/Brand.js';
 import { slugify } from '../utils/slugify.js';
 
 export const productService = {
-  // 1. Lấy danh sách sản phẩm xe hơi (Hỗ trợ Lọc, Tìm kiếm, Phân trang, Sắp xếp)
+  // 1. Lấy danh sách sản phẩm xe hơi (Hỗ trợ Lọc, Tìm kiếm, Phân trang, Sắp xếp bằng thuần Object TypeORM)
   getAll: async (queryFilters) => {
     const {
       search,
@@ -21,65 +22,78 @@ export const productService = {
     } = queryFilters;
 
     const productRepository = AppDataSource.getRepository(Product);
-    const queryBuilder = productRepository
-      .createQueryBuilder('product')
-      .leftJoinAndSelect('product.category', 'category')
-      .leftJoinAndSelect('product.brand', 'brand');
 
-    // Tìm kiếm (Mở rộng tìm kiếm sang hãng xe brand.name)
-    if (search) {
-      queryBuilder.andWhere(
-        '(product.name ILIKE :search OR brand.name ILIKE :search OR product.description ILIKE :search)',
-        { search: `%${search}%` }
-      );
-    }
+    // 1. Xây dựng các điều kiện lọc cơ bản (AND)
+    const baseWhere = {};
 
-    // Lọc phân khúc (Category)
+    // Lọc theo Danh mục / Phân khúc
     if (category) {
-      queryBuilder.andWhere('category.slug = :category', { category });
+      baseWhere.category = { slug: category };
     }
 
-    // Lọc Hãng xe (Brand slug)
+    // Lọc theo Hãng xe
     if (brand) {
-      queryBuilder.andWhere('brand.slug = :brand', { brand });
+      baseWhere.brand = { slug: brand };
     }
 
-    // Động cơ/Pin (Engine mới)
+    // Lọc theo Loại động cơ / Pin
     if (engine) {
-      queryBuilder.andWhere('product.engine = :engine', { engine });
+      baseWhere.engine = engine;
     }
 
-    // 💵 Giá bán
-    if (minPrice) {
-      queryBuilder.andWhere('product.price >= :minPrice', { minPrice: Number(minPrice) });
-    }
-    if (maxPrice) {
-      queryBuilder.andWhere('product.price <= :maxPrice', { maxPrice: Number(maxPrice) });
-    }
-
-    // Nổi bật
+    // Lọc Xe nổi bật
     if (isFeatured !== undefined) {
-      queryBuilder.andWhere('product.isFeatured = :isFeatured', { isFeatured: isFeatured === 'true' });
+      baseWhere.isFeatured = isFeatured === 'true' || isFeatured === true;
     }
 
-    // Sắp xếp
-    if (sort === 'price_asc') {
-      queryBuilder.orderBy('product.price', 'ASC');
-    } else if (sort === 'price_desc') {
-      queryBuilder.orderBy('product.price', 'DESC');
+    // Lọc khoảng Giá bán (Dùng toán tử Between, MoreThanOrEqual, LessThanOrEqual)
+    if (minPrice && maxPrice) {
+      baseWhere.price = Between(Number(minPrice), Number(maxPrice));
+    } else if (minPrice) {
+      baseWhere.price = MoreThanOrEqual(Number(minPrice));
+    } else if (maxPrice) {
+      baseWhere.price = LessThanOrEqual(Number(maxPrice));
+    }
+
+    // 2. Kết hợp với điều kiện Tìm kiếm (OR) dùng toán tử ILike
+    let whereCondition;
+
+    if (search) {
+      const searchPattern = ILike(`%${search}%`);
+      whereCondition = [
+        { ...baseWhere, name: searchPattern },
+        { ...baseWhere, description: searchPattern },
+        { ...baseWhere, brand: { ...baseWhere.brand, name: searchPattern } },
+      ];
     } else {
-      queryBuilder.orderBy('product.createdAt', 'DESC');
+      whereCondition = baseWhere;
     }
 
-    // Phân trang
+    // 3. Thiết lập tiêu chuẩn Sắp xếp (Order)
+    let order = { createdAt: 'DESC' };
+    if (sort === 'price_asc') {
+      order = { price: 'ASC' };
+    } else if (sort === 'price_desc') {
+      order = { price: 'DESC' };
+    }
+
+    // 4. Phân trang
     const pageNum = Number(page);
     const limitNum = Number(limit);
     const skip = (pageNum - 1) * limitNum;
 
-    queryBuilder.skip(skip).take(limitNum);
+    // 5. Thực thi truy vấn bằng findAndCount thuần Object 100%
+    const [products, total] = await productRepository.findAndCount({
+      where: whereCondition,
+      relations: {
+        category: true,
+        brand: true,
+      },
+      order,
+      skip,
+      take: limitNum,
+    });
 
-    const [products, total] = await queryBuilder.getManyAndCount();
-    
     return {
       products,
       total,
