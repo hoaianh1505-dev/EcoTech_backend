@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: ecotech
       POSTGRES_PASSWORD: ecotech123
     ports:
-      - "5432:5432"
+      - "5600:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
