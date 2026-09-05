@@ -12,7 +12,6 @@ import productRoutes from './src/routes/product.routes.js';
 import aiRoutes from './src/routes/ai.routes.js';
 import orderRoutes from './src/routes/order.routes.js';
 import userRoutes from './src/routes/user.routes.js';
-import brandRoutes from './src/routes/brand.routes.js';
 import uploadRoutes from './src/routes/upload.routes.js';
 import cartRoutes from './src/routes/cart.routes.js';
 import paymentRoutes from './src/routes/payment.routes.js';
@@ -39,7 +38,6 @@ app.use('/api/v1/ai/chat', secureLimiter);
 // 3. Mount API Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/categories', categoryRoutes);
-app.use('/api/v1/brands', brandRoutes);
 app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/ai', aiRoutes);
 app.use('/api/v1/orders', orderRoutes);

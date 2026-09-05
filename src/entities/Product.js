@@ -82,11 +82,5 @@ export const Product = new EntitySchema({
       joinColumn: { name: 'categoryId' }, // Tên cột khóa ngoại trong PostgreSQL
       onDelete: 'SET NULL',   // Nếu xóa danh mục thì cột categoryId của sản phẩm về NULL (không bị mất SP)
     },
-    brand: {
-      type: 'many-to-one',    // Nhiều sản phẩm thuộc về 1 Hãng xe
-      target: 'Brand',        // Liên kết tới Entity Brand
-      joinColumn: { name: 'brandId' }, // Tên cột khóa ngoại trong PostgreSQL
-      onDelete: 'SET NULL',   // Nếu xóa Hãng xe thì cột brandId của sản phẩm về NULL
-    },
   },
 });

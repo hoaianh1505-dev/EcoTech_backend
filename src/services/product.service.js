@@ -2,7 +2,6 @@ import { ILike, Between, MoreThanOrEqual, LessThanOrEqual } from 'typeorm';
 import { AppDataSource } from '../config/data-source.js';
 import { Product } from '../entities/Product.js';
 import { Category } from '../entities/Category.js';
-import { Brand } from '../entities/Brand.js';
 import { slugify } from '../utils/slugify.js';
 
 export const productService = {
@@ -11,7 +10,6 @@ export const productService = {
     const {
       search,
       category,
-      brand,
       engine,
       minPrice,
       maxPrice,
@@ -29,11 +27,6 @@ export const productService = {
     // Lọc theo Danh mục / Phân khúc
     if (category) {
       baseWhere.category = { slug: category };
-    }
-
-    // Lọc theo Hãng xe
-    if (brand) {
-      baseWhere.brand = { slug: brand };
     }
 
     // Lọc theo Loại động cơ / Pin
@@ -63,7 +56,6 @@ export const productService = {
       whereCondition = [
         { ...baseWhere, name: searchPattern },
         { ...baseWhere, description: searchPattern },
-        { ...baseWhere, brand: { ...baseWhere.brand, name: searchPattern } },
       ];
     } else {
       whereCondition = baseWhere;
@@ -87,7 +79,6 @@ export const productService = {
       where: whereCondition,
       relations: {
         category: true,
-        brand: true,
       },
       order,
       skip,
@@ -109,7 +100,6 @@ export const productService = {
       where: { slug },
       relations: {
         category: true,
-        brand: true
       },
     });
   },
@@ -124,31 +114,23 @@ export const productService = {
       image,
       images,
       stock,
-      brandId,
       engine,
       color,
       isFeatured,
       categoryId,
     } = productData;
 
-    if (!name || !price || !categoryId || !brandId) {
+    if (!name || !price || !categoryId) {
       throw new Error('MISSING_FIELDS');
     }
 
     const productRepository = AppDataSource.getRepository(Product);
     const categoryRepository = AppDataSource.getRepository(Category);
-    const brandRepository = AppDataSource.getRepository(Brand);
 
     // Kiểm tra danh mục
     const category = await categoryRepository.findOneBy({ id: Number(categoryId) });
     if (!category) {
       throw new Error('CATEGORY_NOT_FOUND');
-    }
-
-    // Kiểm tra hãng xe
-    const brandObj = await brandRepository.findOneBy({ id: Number(brandId) });
-    if (!brandObj) {
-      throw new Error('BRAND_NOT_FOUND');
     }
 
     // Kiểm tra trùng slug
@@ -171,7 +153,6 @@ export const productService = {
       color,
       isFeatured,
       category,
-      brand: brandObj,
     });
 
     return await productRepository.save(newProduct);
@@ -181,13 +162,11 @@ export const productService = {
   update: async (id, updateData) => {
     const productRepository = AppDataSource.getRepository(Product);
     const categoryRepository = AppDataSource.getRepository(Category);
-    const brandRepository = AppDataSource.getRepository(Brand);
 
     const product = await productRepository.findOne({
       where: { id: Number(id) },
       relations: {
         category: true,
-        brand: true
       }
     });
 
@@ -204,15 +183,6 @@ export const productService = {
         throw new Error('CATEGORY_NOT_FOUND');
       }
       product.category = category;
-    }
-
-    // Nếu cập nhật hãng xe
-    if (brandId) {
-      const brandObj = await brandRepository.findOneBy({ id: Number(brandId) });
-      if (!brandObj) {
-        throw new Error('BRAND_NOT_FOUND');
-      }
-      product.brand = brandObj;
     }
 
     // Nếu đổi tên xe -> cập nhật lại slug xe

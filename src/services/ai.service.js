@@ -14,23 +14,22 @@ export const aiService = {
     const products = await productRepository.find({
       relations: {
         category: true,
-        brand: true
       }
     });
 
     const formattedCars = products.map((p, idx) => (
-      `${idx + 1}. Tên xe: ${p.name}, Hãng: ${p.brand?.name || 'Chưa cập nhật'}, Giá bán: ${Number(p.price).toLocaleString('vi-VN')}đ, Thông số động cơ/pin: ${p.engine || 'Chưa cập nhật'}, Màu sắc/Nội thất: ${p.color || 'Chưa cập nhật'}, Số lượng sẵn có: ${p.stock}`
+      `${idx + 1}. Tên xe: ${p.name}, Phân khúc: ${p.category?.name || 'Chưa cập nhật'}, Giá bán: ${Number(p.price).toLocaleString('vi-VN')}đ, Thông số động cơ/pin: ${p.engine || 'Chưa cập nhật'}, Màu sắc/Nội thất: ${p.color || 'Chưa cập nhật'}, Số lượng sẵn có: ${p.stock}`
     )).join('\n');
 
     // 2. Thiết lập System Prompt
-    const systemPrompt = `Bạn là EcoBot - trợ lý ảo tư vấn xe hơi cao cấp của Showroom EcoTech Auto.
-Nhiệm vụ của bạn là hỗ trợ khách hàng tìm hiểu thông tin xe, so sánh thông số kĩ thuật, giá bán và tư vấn dòng xe phù hợp dựa trên danh sách xe thực tế có trong showroom bên dưới.
+    const systemPrompt = `Bạn là EcoBot - trợ lý ảo tư vấn xe điện VinFast cao cấp của Showroom EcoTech Auto.
+Nhiệm vụ của bạn là hỗ trợ khách hàng tìm hiểu thông tin xe điện VinFast, so sánh thông số kỹ thuật, giá bán và tư vấn dòng xe phù hợp dựa trên danh sách xe thực tế có trong showroom bên dưới.
 Hãy trả lời một cách chuyên nghiệp, lịch sự bằng tiếng Việt, ngắn gọn, súc tích và mạch lạc. Tuyệt đối không sử dụng các biểu tượng cảm xúc (emojis) trong câu trả lời của bạn.
 
-Dưới đây là danh sách toàn bộ các dòng xe hiện có sẵn trong cơ sở dữ liệu của showroom:
+Dưới đây là danh sách toàn bộ các dòng xe điện VinFast hiện có sẵn trong cơ sở dữ liệu của showroom:
 ${formattedCars}
 
-Dựa trên danh sách xe thực tế trên, hãy trả lời câu hỏi sau của khách hàng. Nếu khách hàng hỏi về mẫu xe không có trong danh sách, hãy thông báo lịch sự là showroom chưa phân phối mẫu đó và gợi ý dòng xe tương tự có sẵn. Nếu câu hỏi không liên quan đến xe hơi hoặc showroom, hãy lịch sự từ chối trả lời và hướng khách hàng về chủ đề xe hơi:
+Dựa trên danh sách xe thực tế trên, hãy trả lời câu hỏi sau của khách hàng. Nếu khách hàng hỏi về mẫu xe không có trong danh sách, hãy thông báo lịch sự là showroom chưa phân phối mẫu đó và gợi ý dòng xe VinFast tương tự có sẵn. Nếu câu hỏi không liên quan đến xe hơi hoặc showroom, hãy lịch sự từ chối trả lời và hướng khách hàng về chủ đề xe điện VinFast:
 Khách hàng hỏi: "${message}"`;
 
     // 3. Gọi Google Gemini API

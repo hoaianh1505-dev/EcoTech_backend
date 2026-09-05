@@ -26,7 +26,6 @@ export const cartService = {
       where: { cart: { id: cart.id } },
       relations: {
         product: {
-          brand: true,
           category: true
         }
       },
